@@ -2059,7 +2059,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ maxWidth: 980, margin: "0 auto", display: "flex", gap: 4 }}>
-          {tabs.map(t => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => { setTab(t.id); setSelectedMatch(null); setSelectedPlayer(null); setSelectedSession(null); }}>{t.label}</button>)}
+          {tabs.map(t => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => { setTab(t.id); if (view === "coach") { setSelectedMatch(null); setSelectedSession(null); } }}>{t.label}</button>)}
         </div>
       </div>
 
@@ -3326,6 +3326,7 @@ export default function App() {
               </div>
             </div>
           );
+
           const ss = playerSeasonStats(selectedPlayer.id);
           const playerMatches = matches.filter(m => !m.cancelled && m.playerStats[selectedPlayer.id]?.played).sort((a,b) => new Date(b.date)-new Date(a.date));
           const color = POSITION_COLORS[selectedPlayer.position] || "#1e7a3e";
@@ -3341,13 +3342,12 @@ export default function App() {
                     <span style={{ background: color+"22", color, padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>{selectedPlayer.position}</span>
                   </div>
                 </div>
-                <button onClick={() => setSelectedPlayer(null)} style={{ background: "none", border: "none", color: "#4d7a5a", cursor: "pointer", fontSize: 13 }}>← Change</button>
+                <button onClick={() => { setSelectedPlayer(null); setTab("player_home"); }} style={{ background: "none", border: "none", color: "#4d7a5a", cursor: "pointer", fontSize: 13 }}>← Change</button>
               </div>
 
-              {/* Player tabs content */}
+              {/* My Stats tab */}
               {tab === "player_home" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  {/* Season stats */}
                   <div style={{ ...S.card, padding: 18, gridColumn: "1/-1" }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 14 }}>Season Stats</div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
@@ -3360,7 +3360,6 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  {/* Development */}
                   <div style={{ ...S.card, padding: 18 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 14 }}>Development</div>
                     {Object.entries(selectedPlayer.development).map(([k, v]) => (
@@ -3375,12 +3374,10 @@ export default function App() {
                       </div>
                     ))}
                   </div>
-                  {/* Radar */}
                   <div style={{ ...S.card, padding: 18, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>Profile Radar</div>
                     <DualRadar dataA={selectedPlayer.development} dataB={selectedPlayer.development} colorA={color} colorB={color} />
                   </div>
-                  {/* POTM wins */}
                   {(() => {
                     const wins = Object.entries(potmAwards).filter(([,pid]) => pid === selectedPlayer.id).length;
                     return wins > 0 ? (
@@ -3396,6 +3393,7 @@ export default function App() {
                 </div>
               )}
 
+              {/* My Matches tab */}
               {tab === "player_matches" && (
                 <div style={{ ...S.card, padding: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 14 }}>My Match History ({playerMatches.length} appearances)</div>
@@ -3426,6 +3424,7 @@ export default function App() {
                 </div>
               )}
 
+              {/* My Goals tab */}
               {tab === "player_goals" && (
                 <div style={{ ...S.card, padding: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 14 }}>My Development Goals</div>
