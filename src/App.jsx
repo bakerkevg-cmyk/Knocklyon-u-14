@@ -1681,6 +1681,87 @@ function NewsComposer({ squadNews, saveSquadNews, activeCoach, S }) {
   );
 }
 
+function LeagueTab({ leagueData: fallbackData }) {
+  const [rows, setRows] = useState(fallbackData);
+  const [loading, setLoading] = useState(false);
+  const [fetchedAt, setFetchedAt] = useState(null);
+  const [error, setError] = useState(null);
+
+  const fetchLive = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/league");
+      const data = await res.json();
+      if (data.success && data.rows.length > 0) {
+        setRows(data.rows);
+        setFetchedAt(data.fetchedAt);
+      } else {
+        setError("Could not parse live data — showing last known standings.");
+      }
+    } catch (e) {
+      setError("Could not reach DDSL — showing last known standings.");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchLive(); }, []);
+
+  return (
+    <div style={{ background: "#112318", border: "1px solid #1e3d28", borderRadius: 12, padding: 20, maxWidth: 680 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+        <div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 18, color: "#f0faf1" }}>DDSL 14.1 Girls Sunday</div>
+          <div style={{ fontSize: 12, color: "#4d7a5a", marginTop: 2 }}>
+            {fetchedAt ? `Live · Updated ${new Date(fetchedAt).toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit" })}` : "League standings — 2025/26"}
+          </div>
+          {error && <div style={{ fontSize: 11, color: "#F59E0B", marginTop: 4 }}>⚠ {error}</div>}
+        </div>
+        <button onClick={fetchLive} disabled={loading}
+          style={{ background: "#1e7a3e22", border: "1px solid #1e7a3e44", color: "#4ade80", padding: "7px 14px", borderRadius: 8, cursor: loading ? "default" : "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Fetching…" : "↻ Refresh"}
+        </button>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid #1e3d28" }}>
+              {["#","Team","Pld","W","D","L","Pts"].map(h => (
+                <th key={h} style={{ padding: "6px 10px", textAlign: h==="Team"?"left":"center", fontSize: 10, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.6px" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => {
+              const isUs = row.team?.includes("Knocklyon");
+              return (
+                <tr key={i} style={{ borderBottom: "1px solid #0a1a0f", background: isUs ? "#1a3d25" : "transparent" }}>
+                  <td style={{ padding: "10px", textAlign: "center", fontSize: 13, fontWeight: 700, color: isUs ? "#1e7a3e" : "#4d7a5a" }}>{row.position}</td>
+                  <td style={{ padding: "10px", fontSize: 13, fontWeight: isUs ? 700 : 500, color: isUs ? "#E8F5E9" : "#86b598" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <TeamBadge name={row.team} size={24} />
+                      {row.team}
+                      {isUs && <span style={{ fontSize: 9, fontWeight: 700, color: "#1e7a3e", background: "#1e7a3e22", padding: "1px 6px", borderRadius: 10 }}>US</span>}
+                    </div>
+                  </td>
+                  <td style={{ padding: "10px", textAlign: "center", fontSize: 13, color: "#4d7a5a" }}>{row.played}</td>
+                  <td style={{ padding: "10px", textAlign: "center", fontSize: 13, color: "#10B981" }}>{row.won}</td>
+                  <td style={{ padding: "10px", textAlign: "center", fontSize: 13, color: "#4d7a5a" }}>{row.drawn}</td>
+                  <td style={{ padding: "10px", textAlign: "center", fontSize: 13, color: "#EF4444" }}>{row.lost}</td>
+                  <td style={{ padding: "10px", textAlign: "center", fontSize: 15, fontWeight: 800, color: isUs ? "#1e7a3e" : "#E8F5E9" }}>{row.points}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ marginTop: 12, fontSize: 11, color: "#2d5a3d" }}>
+        Source: <a href="https://ddsl.ie/league/208718/" target="_blank" rel="noreferrer" style={{ color: "#4d7a5a" }}>ddsl.ie</a>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState("squad");
   const [players, setPlayers] = useState(INITIAL_PLAYERS);
@@ -2866,43 +2947,7 @@ export default function App() {
         })()}
 
         {/* ── LEAGUE TABLE ── */}
-        {tab === "league" && view === "coach" && (
-          <div style={{ ...S.card, padding: 20, maxWidth: 680 }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 18, color: "#f0faf1", marginBottom: 4 }}>DDSL 14.1 Girls Sunday</div>
-            <div style={{ fontSize: 12, color: "#4d7a5a", marginBottom: 20 }}>League standings — 2025/26</div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid #1e3d28" }}>
-                    {["#","Team","Pld","W","D","L","Pts"].map(h => (
-                      <th key={h} style={{ padding: "6px 10px", textAlign: h==="Team"?"left":"center", fontSize: 10, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.6px" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {leagueData.map((row, i) => {
-                    const isUs = row.team === "Knocklyon United FC";
-                    return (
-                      <tr key={i} style={{ borderBottom: "1px solid #0a1a0f", background: isUs ? "#1a3d25" : "transparent" }}>
-                        <td style={{ padding: "10px 10px", textAlign: "center", fontSize: 13, fontWeight: 700, color: isUs ? "#1e7a3e" : "#4d7a5a" }}>{row.position}</td>
-                        <td style={{ padding: "10px 10px", fontSize: 13, fontWeight: isUs ? 700 : 500, color: isUs ? "#E8F5E9" : "#86b598", display: "flex", alignItems: "center", gap: 8 }}>
-                          <TeamBadge name={row.team} size={24} />
-                          {row.team}
-                          {isUs && <span style={{ fontSize: 9, fontWeight: 700, color: "#1e7a3e", background: "#1e7a3e22", padding: "1px 6px", borderRadius: 10 }}>US</span>}
-                        </td>
-                        <td style={{ padding: "10px 10px", textAlign: "center", fontSize: 13, color: "#4d7a5a" }}>{row.played}</td>
-                        <td style={{ padding: "10px 10px", textAlign: "center", fontSize: 13, color: "#10B981" }}>{row.won}</td>
-                        <td style={{ padding: "10px 10px", textAlign: "center", fontSize: 13, color: "#4d7a5a" }}>{row.drawn}</td>
-                        <td style={{ padding: "10px 10px", textAlign: "center", fontSize: 13, color: "#EF4444" }}>{row.lost}</td>
-                        <td style={{ padding: "10px 10px", textAlign: "center", fontSize: 15, fontWeight: 800, color: isUs ? "#1e7a3e" : "#E8F5E9" }}>{row.points}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        {tab === "league" && view === "coach" && <LeagueTab leagueData={leagueData} />}
 
         {/* ── SESSIONS ── */}
         {tab === "sessions" && (
@@ -3606,27 +3651,57 @@ export default function App() {
 
               {/* Fixtures tab */}
               {tab === "parent_fixtures" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 4 }}>Upcoming Fixtures & Training</div>
-                  {[...upcomingMatches.map(m=>({type:"match",date:new Date(m.date),data:m})), ...upcomingSessions.map(s=>({type:"session",date:new Date(s.date),data:s}))].sort((a,b)=>a.date-b.date).map((item, i) => {
-                    const days = Math.ceil((item.date - today) / 86400000);
-                    const isMatch = item.type === "match";
-                    const color = isMatch ? (item.data.cup?"#F59E0B":item.data.friendly?"#10B981":"#1e7a3e") : "#6366F1";
-                    return (
-                      <div key={i} style={{ ...S.card, padding: 16, borderLeft: `3px solid ${color}` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: 14, color: "#E8F5E9" }}>{isMatch ? `⚽ vs ${item.data.opponent}` : `🏃 ${item.data.title}`}</div>
-                            <div style={{ fontSize: 12, color: "#4d7a5a", marginTop: 3 }}>{fmt(item.date)}{isMatch ? ` · ${item.data.venue}` : ` · ${item.data.duration} mins`}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  {/* Upcoming Matches */}
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>⚽ Upcoming Matches</div>
+                    {upcomingMatches.length === 0 ? (
+                      <div style={{ ...S.card, padding: 16, fontSize: 13, color: "#4d7a5a", fontStyle: "italic" }}>No upcoming matches scheduled.</div>
+                    ) : upcomingMatches.map((m, i) => {
+                      const days = Math.ceil((new Date(m.date) - today) / 86400000);
+                      const color = m.cup ? "#F59E0B" : m.friendly ? "#10B981" : "#1e7a3e";
+                      return (
+                        <div key={m.id} style={{ ...S.card, padding: 16, marginBottom: 8, borderLeft: `3px solid ${color}` }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: 15, color: "#E8F5E9" }}>vs {m.opponent}</div>
+                              <div style={{ fontSize: 12, color: "#4d7a5a", marginTop: 3 }}>
+                                {fmt(new Date(m.date))} · {m.venue}
+                                {m.cup && <span style={{ marginLeft: 8, fontSize: 10, background: "#F59E0B22", color: "#F59E0B", padding: "1px 6px", borderRadius: 10, fontWeight: 700 }}>CUP</span>}
+                                {m.friendly && <span style={{ marginLeft: 8, fontSize: 10, background: "#10B98122", color: "#10B981", padding: "1px 6px", borderRadius: 10, fontWeight: 700 }}>FRIENDLY</span>}
+                              </div>
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: days <= 1 ? "#EF4444" : days <= 3 ? "#F59E0B" : "#4d7a5a" }}>
+                              {days === 0 ? "TODAY" : days === 1 ? "Tomorrow" : `${days}d`}
+                            </span>
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: days <= 1 ? "#EF4444" : days <= 3 ? "#F59E0B" : "#4d7a5a" }}>
-                            {days === 0 ? "TODAY" : days === 1 ? "Tomorrow" : `${days}d`}
-                          </span>
                         </div>
-                      </div>
-                    );
-                  })}
-                  {upcomingMatches.length === 0 && upcomingSessions.length === 0 && <div style={{ fontSize: 13, color: "#4d7a5a" }}>Nothing scheduled yet.</div>}
+                      );
+                    })}
+                  </div>
+
+                  {/* Upcoming Training */}
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#4d7a5a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 }}>🏃 Training Sessions</div>
+                    {upcomingSessions.length === 0 ? (
+                      <div style={{ ...S.card, padding: 16, fontSize: 13, color: "#4d7a5a", fontStyle: "italic" }}>No training sessions scheduled.</div>
+                    ) : upcomingSessions.slice(0, 5).map((s, i) => {
+                      const days = Math.ceil((new Date(s.date) - today) / 86400000);
+                      return (
+                        <div key={s.id} style={{ ...S.card, padding: 16, marginBottom: 8, borderLeft: "3px solid #6366F1" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: 14, color: "#E8F5E9" }}>{s.title}</div>
+                              <div style={{ fontSize: 12, color: "#4d7a5a", marginTop: 3 }}>{fmt(new Date(s.date))} · {s.duration} mins</div>
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: days <= 1 ? "#EF4444" : days <= 3 ? "#F59E0B" : "#4d7a5a" }}>
+                              {days === 0 ? "TODAY" : days === 1 ? "Tomorrow" : `${days}d`}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
