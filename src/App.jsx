@@ -1839,14 +1839,14 @@ export default function App() {
     setLoaded(true);
   };
   const [leagueData] = useState([
-    { position: 1, team: "Ballyoulster United FC", played: 11, won: 10, drawn: 0, lost: 1,  points: 30 },
-    { position: 2, team: "Knocklyon United FC",    played: 12, won: 8,  drawn: 0, lost: 4,  points: 24 },
-    { position: 3, team: "Kilnamanagh AFC",        played: 12, won: 6,  drawn: 1, lost: 5,  points: 19 },
-    { position: 4, team: "Cabinteely FC",          played: 12, won: 5,  drawn: 3, lost: 4,  points: 18 },
-    { position: 5, team: "Parkvale FC",            played: 12, won: 4,  drawn: 1, lost: 7,  points: 13 },
-    { position: 6, team: "Clontarf FC",            played: 6,  won: 3,  drawn: 1, lost: 2,  points: 10 },
-    { position: 7, team: "Maynooth Town FC",       played: 10, won: 3,  drawn: 0, lost: 7,  points: 9  },
-    { position: 8, team: "Tolka Rovers AFC",       played: 11, won: 1,  drawn: 0, lost: 10, points: 3  },
+    { position: 1, team: "Ballyoulster United FC", played: 13, won: 12, drawn: 0, lost: 1,  points: 36 },
+    { position: 2, team: "Knocklyon United FC",    played: 15, won: 11, drawn: 0, lost: 4,  points: 33 },
+    { position: 3, team: "Kilnamanagh AFC",        played: 14, won: 7,  drawn: 1, lost: 6,  points: 22 },
+    { position: 4, team: "Cabinteely FC",          played: 13, won: 6,  drawn: 3, lost: 4,  points: 21 },
+    { position: 5, team: "Parkvale FC",            played: 15, won: 5,  drawn: 1, lost: 9,  points: 16 },
+    { position: 6, team: "Clontarf FC",            played: 7,  won: 3,  drawn: 1, lost: 3,  points: 10 },
+    { position: 7, team: "Maynooth Town FC",       played: 12, won: 3,  drawn: 0, lost: 9,  points: 9  },
+    { position: 8, team: "Tolka Rovers AFC",       played: 13, won: 1,  drawn: 0, lost: 12, points: 3  },
   ]);
 
   // Match attendance — derived from real match data (excl. cancelled)
