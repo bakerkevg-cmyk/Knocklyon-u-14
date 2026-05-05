@@ -705,7 +705,7 @@ const PLAY_STYLES = ["Possession", "Direct / Long Ball", "Counter-Attack", "High
 const OPP_STRENGTHS = ["Set pieces", "Pace in behind", "Strong physically", "Good pressing", "Technical quality", "Long throws", "Wide play", "Aerial threat", "Organised defensively", "Quick transitions"];
 const OPP_WEAKNESSES = ["Weak on the ball", "Vulnerable to pace", "Poor set piece defence", "High defensive line", "Weak wide areas", "Slow to transition", "Vulnerable to press", "Aerial weakness", "Poor fitness", "Individual errors"];
 
-function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles }) {
+function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles, oppBadges, saveOppBadges }) {
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({});
@@ -823,12 +823,17 @@ function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles }) {
           {/* Header */}
           <div style={{ background: "#112318", border: "1px solid #1e3d28", borderRadius: 12, padding: 18 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: "#f0faf1", marginBottom: 6 }}>{selected}</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {p?.formation && <span style={{ background: "#1e7a3e22", color: "#4ade80", padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>{p.formation}</span>}
-                  {p?.playStyle && <span style={{ background: "#0a1a0f", color: "#4d7a5a", padding: "3px 10px", borderRadius: 20, fontSize: 12, border: "1px solid #1e3d28" }}>{p.playStyle}</span>}
-                  {p?.threat && <span style={{ background: (THREAT_COLORS[p.threat]||"#1e7a3e")+"22", color: THREAT_COLORS[p.threat]||"#1e7a3e", padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>⚠ {p.threat} threat</span>}
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 10, background: "#0a1a0f", border: "1px solid #1e3d28", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                  {oppBadges[selected] ? <img src={oppBadges[selected]} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ fontSize: 26 }}>🛡️</span>}
+                </div>
+                <div>
+                  <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: "#f0faf1", marginBottom: 6 }}>{selected}</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {p?.formation && <span style={{ background: "#1e7a3e22", color: "#4ade80", padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>{p.formation}</span>}
+                    {p?.playStyle && <span style={{ background: "#0a1a0f", color: "#4d7a5a", padding: "3px 10px", borderRadius: 20, fontSize: 12, border: "1px solid #1e3d28" }}>{p.playStyle}</span>}
+                    {p?.threat && <span style={{ background: (THREAT_COLORS[p.threat]||"#1e7a3e")+"22", color: THREAT_COLORS[p.threat]||"#1e7a3e", padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>⚠ {p.threat} threat</span>}
+                  </div>
                 </div>
               </div>
               <button onClick={() => startEdit(selected)} style={{ background: "#1e7a3e", border: "none", color: "white", padding: "8px 16px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600 }}>
@@ -866,6 +871,27 @@ function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles }) {
           {editing ? (
             <div style={{ background: "#112318", border: "1px solid #1e3d28", borderRadius: 12, padding: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#f0faf1", marginBottom: 18 }}>Edit Profile — {selected}</div>
+
+              {/* Badge upload */}
+              <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 10, background: "#0a1a0f", border: "1px solid #1e3d28", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                  {oppBadges[selected] ? <img src={oppBadges[selected]} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <span style={{ fontSize: 22 }}>🛡️</span>}
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#86b598", marginBottom: 6 }}>Team Badge</div>
+                  <label style={{ background: "#112318", border: "1px solid #1e3d28", color: "#86b598", padding: "6px 14px", borderRadius: 7, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                    Upload Badge
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = ev => saveOppBadges({ ...oppBadges, [selected]: ev.target.result });
+                      reader.readAsDataURL(file);
+                    }} />
+                  </label>
+                  {oppBadges[selected] && <button onClick={() => saveOppBadges({ ...oppBadges, [selected]: null })} style={{ marginLeft: 8, background: "none", border: "none", color: "#EF444466", cursor: "pointer", fontSize: 12 }}>Remove</button>}
+                </div>
+              </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }}>
                 <div style={sectionStyle}>
@@ -1827,9 +1853,11 @@ export default function App() {
   const saveMatchReviews       = (val) => { setMatchReviews(val);       persist("app:matchReviews", val).then(showSaved); };
 
   // ── LOAD ALL DATA ON MOUNT ─────────────────────────────────────────────────
+  const saveOppBadges = (val) => { setOppBadges(val); persist("app:oppBadges", val).then(showSaved); };
+
   const loadAll = async () => {
-    const keys    = ["app:players","app:matches","app:oppProfiles","app:sessions","app:trainingAttendance","app:potmAwards","app:matchReviews","app:squadNews"];
-    const setters = [setPlayers,   setMatches,   setOppProfiles,   setSessions,   setTrainingAttendance,   setPotmAwards,   setMatchReviews,   setSquadNews];
+    const keys    = ["app:players","app:matches","app:oppProfiles","app:sessions","app:trainingAttendance","app:potmAwards","app:matchReviews","app:squadNews","app:oppBadges"];
+    const setters = [setPlayers,   setMatches,   setOppProfiles,   setSessions,   setTrainingAttendance,   setPotmAwards,   setMatchReviews,   setSquadNews,   setOppBadges];
     for (let i = 0; i < keys.length; i++) {
       try {
         const val = await sbGet(keys[i]);
@@ -2019,7 +2047,9 @@ export default function App() {
     savePoll(matchId, potmPolls[matchId]?.nominees || [], false);
   };
 
-  const [selectedParentChild, setSelectedParentChild] = useState(null);
+  const [editingMatchScore, setEditingMatchScore] = useState(null);
+  const [matchScoreDraft, setMatchScoreDraft] = useState({ gf: 0, ga: 0 });
+  const [oppBadges, setOppBadges] = useState({});
 
   const switchView = (v) => {
     setView(v);
@@ -2618,7 +2648,28 @@ export default function App() {
                               <div style={{ fontSize: 36, fontWeight: 900, color: "#f0faf1", letterSpacing: "-1px", marginTop: 6, marginBottom: 6, display: "flex", alignItems: "center", gap: 12 }}>
                                 {selectedMatch.cancelled ? <span style={{ fontSize: 14, color: "#4d7a5a", fontStyle: "italic" }}>Did not go ahead</span> :
                                   selectedMatch.forfeit ? <span style={{ fontSize: 18, color: "#EF4444" }}>0 – 3 <span style={{ fontSize: 11 }}>(w/o)</span></span> :
-                                  <>{selectedMatch.goalsFor} <span style={{ color: "#2d5a3d", fontWeight: 400 }}>–</span> {selectedMatch.goalsAgainst} <ResultBadge gf={selectedMatch.goalsFor} ga={selectedMatch.goalsAgainst} /></>
+                                  editingMatchScore === selectedMatch.id ? (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                      <input type="number" min="0" value={matchScoreDraft.gf} onChange={e => setMatchScoreDraft(p => ({ ...p, gf: e.target.value }))}
+                                        style={{ width: 52, background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 8, padding: "4px 8px", color: "#f0faf1", fontFamily: "inherit", fontSize: 28, fontWeight: 900, textAlign: "center", outline: "none" }} />
+                                      <span style={{ color: "#2d5a3d", fontWeight: 400 }}>–</span>
+                                      <input type="number" min="0" value={matchScoreDraft.ga} onChange={e => setMatchScoreDraft(p => ({ ...p, ga: e.target.value }))}
+                                        style={{ width: 52, background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 8, padding: "4px 8px", color: "#f0faf1", fontFamily: "inherit", fontSize: 28, fontWeight: 900, textAlign: "center", outline: "none" }} />
+                                      <button onClick={() => {
+                                        const updated = matches.map(m => m.id === selectedMatch.id ? { ...m, goalsFor: parseInt(matchScoreDraft.gf)||0, goalsAgainst: parseInt(matchScoreDraft.ga)||0 } : m);
+                                        saveMatches(updated);
+                                        setSelectedMatch(prev => ({ ...prev, goalsFor: parseInt(matchScoreDraft.gf)||0, goalsAgainst: parseInt(matchScoreDraft.ga)||0 }));
+                                        setEditingMatchScore(null);
+                                      }} style={{ background: "#1e7a3e", border: "none", color: "white", padding: "6px 12px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>✓</button>
+                                      <button onClick={() => setEditingMatchScore(null)} style={{ background: "#112318", border: "1px solid #1e3d28", color: "#4d7a5a", padding: "6px 10px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>✕</button>
+                                    </div>
+                                  ) : (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                      {selectedMatch.goalsFor} <span style={{ color: "#2d5a3d", fontWeight: 400 }}>–</span> {selectedMatch.goalsAgainst} <ResultBadge gf={selectedMatch.goalsFor} ga={selectedMatch.goalsAgainst} />
+                                      <button onClick={() => { setEditingMatchScore(selectedMatch.id); setMatchScoreDraft({ gf: selectedMatch.goalsFor, ga: selectedMatch.goalsAgainst }); }}
+                                        style={{ background: "none", border: "1px solid #1e3d28", color: "#4d7a5a", padding: "3px 8px", borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>✏️</button>
+                                    </div>
+                                  )
                                 }
                               </div>
                               {/* Scorers — Sky Sports style */}
@@ -3352,7 +3403,7 @@ export default function App() {
         {tab === "fixtures" && view === "coach" && <FixturesTab matches={matches} sessions={sessions} />}
 
         {/* ── OPPOSITION PROFILES ── */}
-        {tab === "opposition" && view === "coach" && <OppositionTab matches={matches} leagueData={leagueData} oppProfiles={oppProfiles} setOppProfiles={saveOppProfiles} />}
+        {tab === "opposition" && view === "coach" && <OppositionTab matches={matches} leagueData={leagueData} oppProfiles={oppProfiles} setOppProfiles={saveOppProfiles} oppBadges={oppBadges} saveOppBadges={saveOppBadges} />}
 
         {/* ── PLAYER VIEW ── */}
         {view === "player" && (() => {
