@@ -693,7 +693,7 @@ function DrillsTab({ drills, focusColors }) {
 }
 
 // ── OPPOSITION PROFILES TAB ────────────────────────────────────────────────
-const OPPOSITION_TEAMS = [
+const BASE_OPPOSITION_TEAMS = [
   "Ballyoulster United FC", "Cabinteely FC", "Clontarf FC",
   "Kilnamanagh AFC", "Maynooth Town FC", "Parkvale FC", "Tolka Rovers AFC",
 ];
@@ -705,13 +705,28 @@ const PLAY_STYLES = ["Possession", "Direct / Long Ball", "Counter-Attack", "High
 const OPP_STRENGTHS = ["Set pieces", "Pace in behind", "Strong physically", "Good pressing", "Technical quality", "Long throws", "Wide play", "Aerial threat", "Organised defensively", "Quick transitions"];
 const OPP_WEAKNESSES = ["Weak on the ball", "Vulnerable to pace", "Poor set piece defence", "High defensive line", "Weak wide areas", "Slow to transition", "Vulnerable to press", "Aerial weakness", "Poor fitness", "Individual errors"];
 
-function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles, oppBadges, saveOppBadges }) {
+function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles, oppBadges, saveOppBadges, customOpponents, saveCustomOpponents }) {
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({});
+  const [addingTeam, setAddingTeam] = useState(false);
+  const [newTeamName, setNewTeamName] = useState("");
 
-  const allTeams = OPPOSITION_TEAMS;
+  const allTeams = [...new Set([...BASE_OPPOSITION_TEAMS, ...(customOpponents || [])])].sort();
   const profile = (team) => oppProfiles[team] || {};
+
+  const addTeam = () => {
+    if (!newTeamName.trim()) return;
+    saveCustomOpponents([...(customOpponents || []), newTeamName.trim()]);
+    setSelected(newTeamName.trim());
+    setNewTeamName("");
+    setAddingTeam(false);
+  };
+
+  const deleteTeam = (team) => {
+    saveCustomOpponents((customOpponents || []).filter(t => t !== team));
+    if (selected === team) setSelected(null);
+  };
 
   const startEdit = (team) => {
     const p = profile(team);
@@ -772,17 +787,33 @@ function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles, oppBa
       {/* Team list */}
       <div>
         {selected && <button onClick={() => { setSelected(null); setEditing(false); }} style={{ background: "none", border: "none", color: "#4d7a5a", cursor: "pointer", fontSize: 13, padding: "4px 0", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>← All Teams</button>}
+        {!selected && (
+          <div style={{ marginBottom: 12 }}>
+            {addingTeam ? (
+              <div style={{ display: "flex", gap: 8 }}>
+                <input type="text" placeholder="Team name..." value={newTeamName} onChange={e => setNewTeamName(e.target.value)} onKeyDown={e => e.key === "Enter" && addTeam()}
+                  style={{ flex: 1, background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 8, padding: "8px 12px", color: "#E8F5E9", fontFamily: "inherit", fontSize: 13, outline: "none" }} />
+                <button onClick={addTeam} style={{ background: "#1e7a3e", border: "none", color: "white", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>Add</button>
+                <button onClick={() => { setAddingTeam(false); setNewTeamName(""); }} style={{ background: "#112318", border: "1px solid #1e3d28", color: "#4d7a5a", padding: "8px 12px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>✕</button>
+              </div>
+            ) : (
+              <button onClick={() => setAddingTeam(true)} style={{ background: "#112318", border: "1px dashed #2d5a3d", color: "#4d7a5a", padding: "8px 16px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13, width: "100%" }}>+ Add Opposition Team</button>
+            )}
+          </div>
+        )}
         {!selected ? (
           allTeams.map(team => {
             const p = profile(team);
             const r = h2h(team);
             const hasProfile = !!p.formation || !!p.generalNotes || (p.keyPlayers?.length > 0 && p.keyPlayers[0]?.name);
+            const isCustom = (customOpponents || []).includes(team);
             return (
-              <div key={team} onClick={() => { setSelected(team); setEditing(false); }}
-                style={{ background: "#112318", border: "1px solid #1e3d28", borderRadius: 12, padding: 16, cursor: "pointer", marginBottom: 10, transition: "border-color 0.2s" }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = "#1e7a3e"}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "#1e3d28"}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+              <div key={team} style={{ position: "relative" }}>
+                <div onClick={() => { setSelected(team); setEditing(false); }}
+                  style={{ background: "#112318", border: "1px solid #1e3d28", borderRadius: 12, padding: 16, cursor: "pointer", marginBottom: 10, transition: "border-color 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "#1e7a3e"}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = "#1e3d28"}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                   <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 14, color: "#f0faf1", flex: 1, paddingRight: 8 }}>{team}</div>
                   {p.threat && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: (THREAT_COLORS[p.threat]||"#1e7a3e")+"22", color: THREAT_COLORS[p.threat]||"#1e7a3e", flexShrink: 0 }}>{p.threat}</span>}
                 </div>
@@ -799,6 +830,11 @@ function OppositionTab({ matches, leagueData, oppProfiles, setOppProfiles, oppBa
                   </div>
                 )}
                 {!hasProfile && r.played === 0 && <div style={{ fontSize: 11, color: "#2d5a3d", fontStyle: "italic" }}>No profile yet</div>}
+              </div>
+                {isCustom && (
+                  <button onClick={e => { e.stopPropagation(); deleteTeam(team); }}
+                    style={{ position: "absolute", top: 8, right: 8, background: "none", border: "none", color: "#EF444466", cursor: "pointer", fontSize: 16, zIndex: 1 }}>×</button>
+                )}
               </div>
             );
           })
@@ -1854,10 +1890,11 @@ export default function App() {
 
   // ── LOAD ALL DATA ON MOUNT ─────────────────────────────────────────────────
   const saveOppBadges = (val) => { setOppBadges(val); persist("app:oppBadges", val).then(showSaved); };
+  const saveCustomOpponents = (val) => { setCustomOpponents(val); persist("app:customOpponents", val).then(showSaved); };
 
   const loadAll = async () => {
-    const keys    = ["app:players","app:matches","app:oppProfiles","app:sessions","app:trainingAttendance","app:potmAwards","app:matchReviews","app:squadNews","app:oppBadges"];
-    const setters = [setPlayers,   setMatches,   setOppProfiles,   setSessions,   setTrainingAttendance,   setPotmAwards,   setMatchReviews,   setSquadNews,   setOppBadges];
+    const keys    = ["app:players","app:matches","app:oppProfiles","app:sessions","app:trainingAttendance","app:potmAwards","app:matchReviews","app:squadNews","app:oppBadges","app:customOpponents"];
+    const setters = [setPlayers,   setMatches,   setOppProfiles,   setSessions,   setTrainingAttendance,   setPotmAwards,   setMatchReviews,   setSquadNews,   setOppBadges,   setCustomOpponents];
     for (let i = 0; i < keys.length; i++) {
       try {
         const val = await sbGet(keys[i]);
@@ -2050,6 +2087,7 @@ export default function App() {
   const [editingMatchScore, setEditingMatchScore] = useState(null);
   const [matchScoreDraft, setMatchScoreDraft] = useState({ gf: 0, ga: 0 });
   const [oppBadges, setOppBadges] = useState({});
+  const [customOpponents, setCustomOpponents] = useState([]);
 
   const switchView = (v) => {
     setView(v);
@@ -3403,7 +3441,7 @@ export default function App() {
         {tab === "fixtures" && view === "coach" && <FixturesTab matches={matches} sessions={sessions} />}
 
         {/* ── OPPOSITION PROFILES ── */}
-        {tab === "opposition" && view === "coach" && <OppositionTab matches={matches} leagueData={leagueData} oppProfiles={oppProfiles} setOppProfiles={saveOppProfiles} oppBadges={oppBadges} saveOppBadges={saveOppBadges} />}
+        {tab === "opposition" && view === "coach" && <OppositionTab matches={matches} leagueData={leagueData} oppProfiles={oppProfiles} setOppProfiles={saveOppProfiles} oppBadges={oppBadges} saveOppBadges={saveOppBadges} customOpponents={customOpponents} saveCustomOpponents={saveCustomOpponents} />}
 
         {/* ── PLAYER VIEW ── */}
         {view === "player" && (() => {
