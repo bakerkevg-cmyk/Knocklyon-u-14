@@ -2677,48 +2677,71 @@ export default function App() {
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             {/* Left — match info */}
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 11, color: "#4d7a5a", marginBottom: 4 }}>{new Date(selectedMatch.date).toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {selectedMatch.venue}</div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
-                          <TeamBadge name={selectedMatch.opponent} size={44} />
-                          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: "#f0faf1" }}>vs {selectedMatch.opponent}</div>
-                        </div>
-                              {/* Score */}
-                              <div style={{ fontSize: 36, fontWeight: 900, color: "#f0faf1", letterSpacing: "-1px", marginTop: 6, marginBottom: 6, display: "flex", alignItems: "center", gap: 12 }}>
-                                {selectedMatch.cancelled ? <span style={{ fontSize: 14, color: "#4d7a5a", fontStyle: "italic" }}>Did not go ahead</span> :
-                                  selectedMatch.forfeit ? <span style={{ fontSize: 18, color: "#EF4444" }}>0 – 3 <span style={{ fontSize: 11 }}>(w/o)</span></span> :
-                                  editingMatchScore === selectedMatch.id ? (
-                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                      <input type="number" min="0" value={matchScoreDraft.gf} onChange={e => setMatchScoreDraft(p => ({ ...p, gf: e.target.value }))}
-                                        style={{ width: 52, background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 8, padding: "4px 8px", color: "#f0faf1", fontFamily: "inherit", fontSize: 28, fontWeight: 900, textAlign: "center", outline: "none" }} />
-                                      <span style={{ color: "#2d5a3d", fontWeight: 400 }}>–</span>
-                                      <input type="number" min="0" value={matchScoreDraft.ga} onChange={e => setMatchScoreDraft(p => ({ ...p, ga: e.target.value }))}
-                                        style={{ width: 52, background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 8, padding: "4px 8px", color: "#f0faf1", fontFamily: "inherit", fontSize: 28, fontWeight: 900, textAlign: "center", outline: "none" }} />
-                                      <button onClick={() => {
-                                        const updated = matches.map(m => m.id === selectedMatch.id ? { ...m, goalsFor: parseInt(matchScoreDraft.gf)||0, goalsAgainst: parseInt(matchScoreDraft.ga)||0 } : m);
-                                        saveMatches(updated);
-                                        setSelectedMatch(prev => ({ ...prev, goalsFor: parseInt(matchScoreDraft.gf)||0, goalsAgainst: parseInt(matchScoreDraft.ga)||0 }));
-                                        setEditingMatchScore(null);
-                                      }} style={{ background: "#1e7a3e", border: "none", color: "white", padding: "6px 12px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>✓</button>
-                                      <button onClick={() => setEditingMatchScore(null)} style={{ background: "#112318", border: "1px solid #1e3d28", color: "#4d7a5a", padding: "6px 10px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>✕</button>
+                              {/* Date, venue, opponent — all editable */}
+                              {editingMatchScore === selectedMatch.id ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                                    <div>
+                                      <div style={{ fontSize: 10, color: "#4d7a5a", marginBottom: 3 }}>Opponent</div>
+                                      <input type="text" value={matchScoreDraft.opponent} onChange={e => setMatchScoreDraft(p => ({ ...p, opponent: e.target.value }))}
+                                        style={{ background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 7, padding: "6px 10px", color: "#f0faf1", fontFamily: "inherit", fontSize: 13, outline: "none", width: "100%" }} />
                                     </div>
-                                  ) : (
-                                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                      {selectedMatch.goalsFor} <span style={{ color: "#2d5a3d", fontWeight: 400 }}>–</span> {selectedMatch.goalsAgainst} <ResultBadge gf={selectedMatch.goalsFor} ga={selectedMatch.goalsAgainst} />
-                                      <button onClick={() => { setEditingMatchScore(selectedMatch.id); setMatchScoreDraft({ gf: selectedMatch.goalsFor, ga: selectedMatch.goalsAgainst }); }}
-                                        style={{ background: "none", border: "1px solid #1e3d28", color: "#4d7a5a", padding: "3px 8px", borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>✏️</button>
+                                    <div>
+                                      <div style={{ fontSize: 10, color: "#4d7a5a", marginBottom: 3 }}>Date</div>
+                                      <input type="date" value={matchScoreDraft.date} onChange={e => setMatchScoreDraft(p => ({ ...p, date: e.target.value }))}
+                                        style={{ background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 7, padding: "6px 10px", color: "#f0faf1", fontFamily: "inherit", fontSize: 13, outline: "none", width: "100%" }} />
                                     </div>
-                                  )
-                                }
-                              </div>
-                              {/* Scorers — Sky Sports style */}
-                              {scorers.length > 0 && (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 2 }}>
-                                  {scorers.map((name, i) => (
-                                    <span key={i} style={{ fontSize: 22, fontWeight: 600, color: "#86b598", display: "flex", alignItems: "center", gap: 4 }}>
-                                      ⚽ {name}
-                                    </span>
-                                  ))}
+                                    <div>
+                                      <div style={{ fontSize: 10, color: "#4d7a5a", marginBottom: 3 }}>Venue</div>
+                                      <select value={matchScoreDraft.venue} onChange={e => setMatchScoreDraft(p => ({ ...p, venue: e.target.value }))}
+                                        style={{ background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 7, padding: "6px 10px", color: "#f0faf1", fontFamily: "inherit", fontSize: 13, outline: "none", width: "100%" }}>
+                                        <option>Home</option><option>Away</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <div style={{ fontSize: 10, color: "#4d7a5a" }}>Score:</div>
+                                    <input type="number" min="0" value={matchScoreDraft.gf} onChange={e => setMatchScoreDraft(p => ({ ...p, gf: e.target.value }))}
+                                      style={{ width: 52, background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 7, padding: "4px 8px", color: "#f0faf1", fontFamily: "inherit", fontSize: 22, fontWeight: 900, textAlign: "center", outline: "none" }} />
+                                    <span style={{ color: "#2d5a3d" }}>–</span>
+                                    <input type="number" min="0" value={matchScoreDraft.ga} onChange={e => setMatchScoreDraft(p => ({ ...p, ga: e.target.value }))}
+                                      style={{ width: 52, background: "#0a1a0f", border: "1px solid #1e7a3e", borderRadius: 7, padding: "4px 8px", color: "#f0faf1", fontFamily: "inherit", fontSize: 22, fontWeight: 900, textAlign: "center", outline: "none" }} />
+                                    <button onClick={() => {
+                                      const updated = matches.map(m => m.id === selectedMatch.id ? { ...m, opponent: matchScoreDraft.opponent, date: matchScoreDraft.date, venue: matchScoreDraft.venue, goalsFor: parseInt(matchScoreDraft.gf)||0, goalsAgainst: parseInt(matchScoreDraft.ga)||0 } : m);
+                                      saveMatches(updated);
+                                      setSelectedMatch(prev => ({ ...prev, opponent: matchScoreDraft.opponent, date: matchScoreDraft.date, venue: matchScoreDraft.venue, goalsFor: parseInt(matchScoreDraft.gf)||0, goalsAgainst: parseInt(matchScoreDraft.ga)||0 }));
+                                      setEditingMatchScore(null);
+                                    }} style={{ background: "#1e7a3e", border: "none", color: "white", padding: "6px 14px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>✓ Save</button>
+                                    <button onClick={() => setEditingMatchScore(null)} style={{ background: "#112318", border: "1px solid #1e3d28", color: "#4d7a5a", padding: "6px 10px", borderRadius: 7, cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>✕</button>
+                                  </div>
                                 </div>
+                              ) : (
+                                <>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                                    <div style={{ fontSize: 11, color: "#4d7a5a" }}>{new Date(selectedMatch.date).toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {selectedMatch.venue}</div>
+                                    <button onClick={() => { setEditingMatchScore(selectedMatch.id); setMatchScoreDraft({ gf: selectedMatch.goalsFor, ga: selectedMatch.goalsAgainst, opponent: selectedMatch.opponent, date: selectedMatch.date, venue: selectedMatch.venue }); }}
+                                      style={{ background: "none", border: "1px solid #1e3d28", color: "#4d7a5a", padding: "2px 7px", borderRadius: 5, cursor: "pointer", fontFamily: "inherit", fontSize: 10 }}>✏️ Edit</button>
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+                                    <TeamBadge name={selectedMatch.opponent} size={44} />
+                                    <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: "#f0faf1" }}>vs {selectedMatch.opponent}</div>
+                                  </div>
+                                  {/* Score */}
+                                  <div style={{ fontSize: 36, fontWeight: 900, color: "#f0faf1", letterSpacing: "-1px", marginTop: 6, marginBottom: 6, display: "flex", alignItems: "center", gap: 12 }}>
+                                    {selectedMatch.cancelled ? <span style={{ fontSize: 14, color: "#4d7a5a", fontStyle: "italic" }}>Did not go ahead</span> :
+                                      selectedMatch.forfeit ? <span style={{ fontSize: 18, color: "#EF4444" }}>0 – 3 <span style={{ fontSize: 11 }}>(w/o)</span></span> :
+                                      <>{selectedMatch.goalsFor} <span style={{ color: "#2d5a3d", fontWeight: 400 }}>–</span> {selectedMatch.goalsAgainst} <ResultBadge gf={selectedMatch.goalsFor} ga={selectedMatch.goalsAgainst} /></>
+                                    }
+                                  </div>
+                                  {/* Scorers */}
+                                  {scorers.length > 0 && (
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 2 }}>
+                                      {scorers.map((name, i) => (
+                                        <span key={i} style={{ fontSize: 22, fontWeight: 600, color: "#86b598", display: "flex", alignItems: "center", gap: 4 }}>⚽ {name}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
 
